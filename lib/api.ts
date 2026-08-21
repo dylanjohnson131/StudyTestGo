@@ -39,6 +39,11 @@ export const addTerm = (chapterId: string, term: string, definition: string) =>
     method: "POST",
     body: JSON.stringify({ term, definition }),
   });
+export const bulkAddTerms = (chapterId: string, entries: { term: string; definition: string }[]) =>
+  request<Term[]>(`/api/chapters/${chapterId}/terms/bulk`, {
+    method: "POST",
+    body: JSON.stringify({ entries }),
+  });
 export const updateTerm = (id: string, updates: { term?: string; definition?: string }) =>
   request<Term>(`/api/terms/${id}`, { method: "PATCH", body: JSON.stringify(updates) });
 export const deleteTerm = (id: string) => request<{ ok: true }>(`/api/terms/${id}`, { method: "DELETE" });

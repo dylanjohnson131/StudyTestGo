@@ -3,18 +3,10 @@
 import { useMemo, useState } from "react";
 import type { Term, Mastery } from "@/lib/types";
 import * as api from "@/lib/api";
-
-function shuffle<T>(items: T[]): T[] {
-  const copy = [...items];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
+import { weightedShuffle } from "@/lib/weighting";
 
 export default function Flashcards({ terms, onReviewed }: { terms: Term[]; onReviewed: () => Promise<void> }) {
-  const [deck, setDeck] = useState(() => shuffle(terms));
+  const [deck, setDeck] = useState(() => weightedShuffle(terms));
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -23,7 +15,7 @@ export default function Flashcards({ terms, onReviewed }: { terms: Term[]; onRev
   const done = deck.length === 0 || index >= deck.length;
 
   function restart() {
-    setDeck(shuffle(terms));
+    setDeck(weightedShuffle(terms));
     setIndex(0);
     setFlipped(false);
   }

@@ -368,6 +368,56 @@ input {
   min-width: 160px;
 }
 
+/* Bulk import */
+
+.bulk-import-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.9rem 1rem;
+  margin-top: 0.6rem;
+}
+
+.bulk-import-textarea {
+  width: 100%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+
+.bulk-import-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  font-size: 0.85rem;
+}
+
+.bulk-import-count {
+  color: var(--known);
+  font-weight: 600;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.bulk-import-failed {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
+  padding-left: 1.2rem;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
 /* Flashcards */
 
 .flashcards {

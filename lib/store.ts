@@ -152,6 +152,27 @@ export async function addTerm(chapterId: string, term: string, definition: strin
   return newTerm;
 }
 
+export async function addTerms(
+  chapterId: string,
+  entries: { term: string; definition: string }[]
+): Promise<Term[] | null> {
+  const chapter = await getChapter(chapterId);
+  if (!chapter) return null;
+  const created: Term[] = entries.map((e) => ({
+    id: randomUUID(),
+    term: e.term.trim(),
+    definition: e.definition.trim(),
+    mastery: "new",
+    lastReviewedAt: null,
+    createdAt: now(),
+    updatedAt: now(),
+  }));
+  chapter.terms.push(...created);
+  chapter.updatedAt = now();
+  await writeJSON(chapterPath(chapterId), chapter);
+  return created;
+}
+
 async function findChapterByTermId(termId: string): Promise<Chapter | null> {
   const ids = await listChapterIds();
   for (const id of ids) {

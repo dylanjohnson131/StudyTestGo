@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { Term } from "@/lib/types";
+import { weightedSample } from "@/lib/weighting";
 
 const MAX_PAIRS = 8;
 
@@ -17,7 +18,7 @@ function shuffle<T>(items: T[]): T[] {
 }
 
 function buildRound(terms: Term[]): Tile[] {
-  const selected = shuffle(terms).slice(0, MAX_PAIRS);
+  const selected = weightedSample(terms, MAX_PAIRS);
   const tiles: Tile[] = selected.flatMap((t) => [
     { key: `${t.id}-term`, termId: t.id, kind: "term" as const, text: t.term },
     { key: `${t.id}-def`, termId: t.id, kind: "definition" as const, text: t.definition },
