@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Term } from "@/lib/types";
 import * as api from "@/lib/api";
+import BulkImportPanel from "./BulkImportPanel";
 
 export default function TermsEditor({
   chapterId,
@@ -46,6 +47,8 @@ export default function TermsEditor({
 
   return (
     <div className="terms-editor">
+      <BulkImportPanel chapterId={chapterId} onImported={onChanged} />
+
       {terms.length === 0 && <p className="muted">No terms yet — add your first one below.</p>}
 
       {terms.length > 0 && (
