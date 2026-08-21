@@ -18,6 +18,15 @@ export default function BulkImportPanel({
 
   const { entries, failed } = useMemo(() => parseBulkImport(raw), [raw]);
 
+  function handleTextareaKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key !== "Tab" || e.shiftKey) return;
+    e.preventDefault();
+    // Use the browser's native insertion so cursor position and undo history
+    // stay correct — manually tracking selection via React state + rAF races
+    // with fast typing and can scramble the text.
+    document.execCommand("insertText", false, "\t");
+  }
+
   async function handleImport() {
     if (entries.length === 0) return;
     setBusy(true);
@@ -50,6 +59,7 @@ export default function BulkImportPanel({
             placeholder={"Mitochondria\tThe powerhouse of the cell\nNucleus\tControl center of the cell"}
             value={raw}
             onChange={(e) => setRaw(e.target.value)}
+            onKeyDown={handleTextareaKeyDown}
             disabled={busy}
           />
 
