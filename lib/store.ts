@@ -13,7 +13,9 @@ import type {
   UnitSummary,
 } from "./types";
 
-const DATA_DIR = path.join(process.cwd(), "data");
+// Overridable so test/dev tooling can point at a scratch directory instead of
+// ever touching the real app data — never hardcode this to process.cwd() alone.
+const DATA_DIR = process.env.STUDYTESTGO_DATA_DIR ?? path.join(process.cwd(), "data");
 const CHAPTERS_DIR = path.join(DATA_DIR, "chapters");
 const UNITS_FILE = path.join(DATA_DIR, "units.json");
 
