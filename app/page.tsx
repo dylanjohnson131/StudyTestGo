@@ -1,7 +1,7 @@
-import { listChapters } from "@/lib/store";
-import DashboardClient from "@/components/DashboardClient";
+import { listClassSummaries } from "@/lib/store";
+import ClassesClient from "@/components/ClassesClient";
 
-export default async function Dashboard() {
-  const chapters = await listChapters();
-  return <DashboardClient initialChapters={chapters} />;
+export default async function Home() {
+  const classes = await listClassSummaries();
+  return <ClassesClient initialClasses={classes} />;
 }

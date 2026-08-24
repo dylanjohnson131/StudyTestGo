@@ -19,6 +19,7 @@ export interface TestAttempt {
 
 export interface Chapter {
   id: string;
+  classId: string;
   name: string;
   createdAt: string;
   updatedAt: string;
@@ -28,11 +29,24 @@ export interface Chapter {
 
 export interface Unit {
   id: string;
+  classId: string;
   name: string;
   chapterIds: string[];
   testAttempts: TestAttempt[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Class {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ClassSummary extends Class {
+  chapterCount: number;
+  unitCount: number;
 }
 
 export interface MasteryCounts {
@@ -44,6 +58,7 @@ export interface MasteryCounts {
 
 export interface ChapterSummary {
   id: string;
+  classId: string;
   name: string;
   createdAt: string;
   updatedAt: string;
@@ -54,6 +69,7 @@ export interface ChapterSummary {
 
 export interface UnitSummary {
   id: string;
+  classId: string;
   name: string;
   chapterIds: string[];
   createdAt: string;

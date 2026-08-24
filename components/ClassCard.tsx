@@ -2,40 +2,44 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import type { UnitSummary } from "@/lib/types";
-import ProgressBar from "./ProgressBar";
+import type { ClassSummary } from "@/lib/types";
 
-export default function UnitCard({
-  unit,
+export default function ClassCard({
+  cls,
   onRename,
   onDelete,
 }: {
-  unit: UnitSummary;
+  cls: ClassSummary;
   onRename: (id: string, name: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }) {
   const [editing, setEditing] = useState(false);
-  const [name, setName] = useState(unit.name);
+  const [name, setName] = useState(cls.name);
   const [busy, setBusy] = useState(false);
 
   async function submitRename(e: React.FormEvent) {
     e.preventDefault();
     const trimmed = name.trim();
-    if (!trimmed || trimmed === unit.name) {
+    if (!trimmed || trimmed === cls.name) {
       setEditing(false);
-      setName(unit.name);
+      setName(cls.name);
       return;
     }
     setBusy(true);
-    await onRename(unit.id, trimmed);
+    await onRename(cls.id, trimmed);
     setBusy(false);
     setEditing(false);
   }
 
   async function handleDelete() {
-    if (!confirm(`Delete unit "${unit.name}"? Chapters themselves are not affected.`)) return;
+    if (
+      !confirm(
+        `Delete class "${cls.name}"? This permanently deletes all ${cls.chapterCount} chapter(s) and ${cls.unitCount} unit(s) in it.`
+      )
+    )
+      return;
     setBusy(true);
-    await onDelete(unit.id);
+    await onDelete(cls.id);
   }
 
   return (
@@ -52,8 +56,8 @@ export default function UnitCard({
             />
           </form>
         ) : (
-          <Link href={`/classes/${unit.classId}/units/${unit.id}`} className="chapter-card-title">
-            {unit.name}
+          <Link href={`/classes/${cls.id}`} className="chapter-card-title">
+            {cls.name}
           </Link>
         )}
         <div className="chapter-card-actions">
@@ -67,23 +71,10 @@ export default function UnitCard({
       </div>
 
       <div className="chapter-card-meta">
-        {unit.chapterIds.length} chapters &middot; {unit.termCount} terms
+        {cls.chapterCount} chapters &middot; {cls.unitCount} units
       </div>
 
-      <ProgressBar mastery={unit.mastery} />
-
-      <div className="chapter-card-test">
-        {unit.latestTest ? (
-          <span>
-            Last test: {Math.round((unit.latestTest.score / unit.latestTest.total) * 100)}% on{" "}
-            {new Date(unit.latestTest.takenAt).toLocaleDateString()}
-          </span>
-        ) : (
-          <span className="muted">No tests taken yet</span>
-        )}
-      </div>
-
-      <Link href={`/classes/${unit.classId}/units/${unit.id}`} className="btn btn-primary chapter-card-open">
+      <Link href={`/classes/${cls.id}`} className="btn btn-primary chapter-card-open">
         Open
       </Link>
     </div>

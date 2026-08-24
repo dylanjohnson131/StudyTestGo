@@ -49,11 +49,11 @@ export default function UnitWorkspace({
   async function handleDeleteUnit() {
     if (!confirm(`Delete unit "${unit.name}"? Chapters themselves are not affected.`)) return;
     await api.deleteUnit(unitId);
-    router.push("/units");
+    router.push(`/classes/${unit.classId}/units`);
   }
 
   async function startManagingChapters() {
-    setAllChapters(await api.fetchChapters());
+    setAllChapters(await api.fetchChapters(unit.classId));
     setManagingChapters(true);
   }
 
@@ -67,7 +67,7 @@ export default function UnitWorkspace({
 
   return (
     <main className="container">
-      <Link href="/units" className="back-link">
+      <Link href={`/classes/${unit.classId}/units`} className="back-link">
         ← All units
       </Link>
 

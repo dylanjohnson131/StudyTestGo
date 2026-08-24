@@ -1,26 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import type { ChapterSummary } from "@/lib/types";
+import type { ClassSummary } from "@/lib/types";
 import * as api from "@/lib/api";
-import ChapterCard from "@/components/ChapterCard";
+import ClassCard from "@/components/ClassCard";
 
-export default function DashboardClient({
-  classId,
-  className,
-  initialChapters,
-}: {
-  classId: string;
-  className: string;
-  initialChapters: ChapterSummary[];
-}) {
-  const [chapters, setChapters] = useState<ChapterSummary[]>(initialChapters);
+export default function ClassesClient({ initialClasses }: { initialClasses: ClassSummary[] }) {
+  const [classes, setClasses] = useState<ClassSummary[]>(initialClasses);
   const [newName, setNewName] = useState("");
   const [creating, setCreating] = useState(false);
 
   async function refresh() {
-    setChapters(await api.fetchChapters(classId));
+    setClasses(await api.fetchClasses());
   }
 
   async function handleCreate(e: React.FormEvent) {
@@ -29,7 +20,7 @@ export default function DashboardClient({
     if (!name) return;
     setCreating(true);
     try {
-      await api.createChapter(classId, name);
+      await api.createClass(name);
       setNewName("");
       await refresh();
     } finally {
@@ -38,45 +29,39 @@ export default function DashboardClient({
   }
 
   async function handleRename(id: string, name: string) {
-    await api.renameChapter(id, name);
+    await api.renameClass(id, name);
     await refresh();
   }
 
   async function handleDelete(id: string) {
-    await api.deleteChapter(id);
+    await api.deleteClass(id);
     await refresh();
   }
 
   return (
     <main className="container">
-      <Link href="/" className="back-link">
-        ← All classes
-      </Link>
-
       <header className="page-header">
-        <h1>{className}</h1>
-        <Link href={`/classes/${classId}/units`} className="btn">
-          Unit Study
-        </Link>
+        <h1>StudyTestGo</h1>
       </header>
+      <p className="muted">Create a class, then open it to build out its chapters and units.</p>
 
       <form className="create-chapter-form" onSubmit={handleCreate}>
         <input
-          placeholder="New chapter name"
+          placeholder="New class name"
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           disabled={creating}
         />
         <button className="btn btn-primary" type="submit" disabled={creating || !newName.trim()}>
-          Create chapter
+          Create class
         </button>
       </form>
 
-      {chapters.length === 0 && <p className="muted">No chapters yet. Create one above to get started.</p>}
+      {classes.length === 0 && <p className="muted">No classes yet. Create one above to get started.</p>}
 
       <div className="chapter-grid">
-        {chapters.map((chapter) => (
-          <ChapterCard key={chapter.id} chapter={chapter} onRename={handleRename} onDelete={handleDelete} />
+        {classes.map((cls) => (
+          <ClassCard key={cls.id} cls={cls} onRename={handleRename} onDelete={handleDelete} />
         ))}
       </div>
     </main>

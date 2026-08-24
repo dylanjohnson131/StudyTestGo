@@ -46,12 +46,12 @@ export default function ChapterWorkspace({
   async function handleDeleteChapter() {
     if (!confirm(`Delete "${chapter.name}"? This removes all its terms and test history.`)) return;
     await api.deleteChapter(chapterId);
-    router.push("/");
+    router.push(`/classes/${chapter.classId}`);
   }
 
   return (
     <main className="container">
-      <Link href="/" className="back-link">
+      <Link href={`/classes/${chapter.classId}`} className="back-link">
         ← All chapters
       </Link>
 

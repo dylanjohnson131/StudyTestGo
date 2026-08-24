@@ -4,6 +4,8 @@ import { randomUUID } from "node:crypto";
 import type {
   Chapter,
   ChapterSummary,
+  Class,
+  ClassSummary,
   Mastery,
   MasteryCounts,
   Term,
@@ -18,6 +20,7 @@ import type {
 const DATA_DIR = process.env.STUDYTESTGO_DATA_DIR ?? path.join(process.cwd(), "data");
 const CHAPTERS_DIR = path.join(DATA_DIR, "chapters");
 const UNITS_FILE = path.join(DATA_DIR, "units.json");
+const CLASSES_FILE = path.join(DATA_DIR, "classes.json");
 
 async function ensureDirs() {
   await fs.mkdir(CHAPTERS_DIR, { recursive: true });
@@ -56,6 +59,78 @@ function latestOf(attempts: TestAttempt[]): TestAttempt | null {
   return [...attempts].sort((a, b) => b.takenAt.localeCompare(a.takenAt))[0];
 }
 
+// ---- Classes ----
+
+async function readClasses(): Promise<Class[]> {
+  await ensureDirs();
+  const classes = await readJSON<Class[]>(CLASSES_FILE);
+  return classes ?? [];
+}
+
+async function writeClasses(classes: Class[]) {
+  await writeJSON(CLASSES_FILE, classes);
+}
+
+export async function listClasses(): Promise<Class[]> {
+  const classes = await readClasses();
+  return [...classes].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export async function getClass(id: string): Promise<Class | null> {
+  const classes = await readClasses();
+  return classes.find((c) => c.id === id) ?? null;
+}
+
+export async function createClass(name: string): Promise<Class> {
+  const classes = await readClasses();
+  const cls: Class = { id: randomUUID(), name: name.trim(), createdAt: now(), updatedAt: now() };
+  classes.push(cls);
+  await writeClasses(classes);
+  return cls;
+}
+
+export async function renameClass(id: string, name: string): Promise<Class | null> {
+  const classes = await readClasses();
+  const cls = classes.find((c) => c.id === id);
+  if (!cls) return null;
+  cls.name = name.trim();
+  cls.updatedAt = now();
+  await writeClasses(classes);
+  return cls;
+}
+
+export async function deleteClass(id: string): Promise<boolean> {
+  const classes = await readClasses();
+  const idx = classes.findIndex((c) => c.id === id);
+  if (idx === -1) return false;
+
+  const chapterIds = await listChapterIds();
+  for (const chapterId of chapterIds) {
+    const chapter = await getChapter(chapterId);
+    if (chapter && chapter.classId === id) {
+      await fs.unlink(chapterPath(chapterId)).catch(() => {});
+    }
+  }
+
+  const units = await readUnits();
+  const remainingUnits = units.filter((u) => u.classId !== id);
+  if (remainingUnits.length !== units.length) await writeUnits(remainingUnits);
+
+  classes.splice(idx, 1);
+  await writeClasses(classes);
+  return true;
+}
+
+export async function toClassSummary(cls: Class): Promise<ClassSummary> {
+  const [chapters, units] = await Promise.all([listChapters(cls.id), listUnits(cls.id)]);
+  return { ...cls, chapterCount: chapters.length, unitCount: units.length };
+}
+
+export async function listClassSummaries(): Promise<ClassSummary[]> {
+  const classes = await listClasses();
+  return Promise.all(classes.map(toClassSummary));
+}
+
 // ---- Chapters ----
 
 export async function listChapterIds(): Promise<string[]> {
@@ -67,6 +142,7 @@ export async function listChapterIds(): Promise<string[]> {
 function toChapterSummary(c: Chapter): ChapterSummary {
   return {
     id: c.id,
+    classId: c.classId,
     name: c.name,
     createdAt: c.createdAt,
     updatedAt: c.updatedAt,
@@ -76,11 +152,12 @@ function toChapterSummary(c: Chapter): ChapterSummary {
   };
 }
 
-export async function listChapters(): Promise<ChapterSummary[]> {
+export async function listChapters(classId?: string): Promise<ChapterSummary[]> {
   const ids = await listChapterIds();
   const chapters = await Promise.all(ids.map((id) => getChapter(id)));
   return chapters
     .filter((c): c is Chapter => c !== null)
+    .filter((c) => classId === undefined || c.classId === classId)
     .map(toChapterSummary)
     .sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -90,10 +167,11 @@ export async function getChapter(id: string): Promise<Chapter | null> {
   return readJSON<Chapter>(chapterPath(id));
 }
 
-export async function createChapter(name: string): Promise<Chapter> {
+export async function createChapter(classId: string, name: string): Promise<Chapter> {
   await ensureDirs();
   const chapter: Chapter = {
     id: randomUUID(),
+    classId,
     name: name.trim(),
     createdAt: now(),
     updatedAt: now(),
@@ -269,9 +347,11 @@ async function writeUnits(units: Unit[]) {
   await writeJSON(UNITS_FILE, units);
 }
 
-export async function listUnits(): Promise<Unit[]> {
+export async function listUnits(classId?: string): Promise<Unit[]> {
   const units = await readUnits();
-  return [...units].sort((a, b) => a.name.localeCompare(b.name));
+  return units
+    .filter((u) => classId === undefined || u.classId === classId)
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function getUnit(id: string): Promise<Unit | null> {
@@ -279,10 +359,11 @@ export async function getUnit(id: string): Promise<Unit | null> {
   return units.find((u) => u.id === id) ?? null;
 }
 
-export async function createUnit(name: string, chapterIds: string[]): Promise<Unit> {
+export async function createUnit(classId: string, name: string, chapterIds: string[]): Promise<Unit> {
   const units = await readUnits();
   const unit: Unit = {
     id: randomUUID(),
+    classId,
     name: name.trim(),
     chapterIds: [...new Set(chapterIds)],
     testAttempts: [],
@@ -331,6 +412,7 @@ export async function toUnitSummary(unit: Unit): Promise<UnitSummary> {
   const terms = await getUnitPooledTerms(unit);
   return {
     id: unit.id,
+    classId: unit.classId,
     name: unit.name,
     chapterIds: unit.chapterIds,
     createdAt: unit.createdAt,
@@ -341,8 +423,8 @@ export async function toUnitSummary(unit: Unit): Promise<UnitSummary> {
   };
 }
 
-export async function listUnitSummaries(): Promise<UnitSummary[]> {
-  const units = await listUnits();
+export async function listUnitSummaries(classId?: string): Promise<UnitSummary[]> {
+  const units = await listUnits(classId);
   return Promise.all(units.map(toUnitSummary));
 }
 

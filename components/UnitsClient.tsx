@@ -7,9 +7,13 @@ import * as api from "@/lib/api";
 import UnitCard from "@/components/UnitCard";
 
 export default function UnitsClient({
+  classId,
+  className,
   initialUnits,
   initialChapters,
 }: {
+  classId: string;
+  className: string;
   initialUnits: UnitSummary[];
   initialChapters: ChapterSummary[];
 }) {
@@ -20,7 +24,7 @@ export default function UnitsClient({
   const [creating, setCreating] = useState(false);
 
   async function refresh() {
-    const [u, c] = await Promise.all([api.fetchUnits(), api.fetchChapters()]);
+    const [u, c] = await Promise.all([api.fetchUnits(classId), api.fetchChapters(classId)]);
     setUnits(u);
     setChapters(c);
   }
@@ -35,7 +39,7 @@ export default function UnitsClient({
     if (!name || selectedChapterIds.length === 0) return;
     setCreating(true);
     try {
-      await api.createUnit(name, selectedChapterIds);
+      await api.createUnit(classId, name, selectedChapterIds);
       setNewName("");
       setSelectedChapterIds([]);
       await refresh();
@@ -56,8 +60,8 @@ export default function UnitsClient({
 
   return (
     <main className="container">
-      <Link href="/" className="back-link">
-        ← All chapters
+      <Link href={`/classes/${classId}`} className="back-link">
+        ← {className}
       </Link>
 
       <header className="page-header">
