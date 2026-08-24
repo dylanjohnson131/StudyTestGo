@@ -1,6 +1,8 @@
 import type {
   Chapter,
   ChapterSummary,
+  Class,
+  ClassSummary,
   Mastery,
   Term,
   TermResult,
@@ -23,11 +25,22 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+// Classes
+export const fetchClasses = () => request<ClassSummary[]>("/api/classes");
+export const fetchClass = (id: string) => request<Class>(`/api/classes/${id}`);
+export const createClass = (name: string) =>
+  request<Class>("/api/classes", { method: "POST", body: JSON.stringify({ name }) });
+export const renameClass = (id: string, name: string) =>
+  request<Class>(`/api/classes/${id}`, { method: "PATCH", body: JSON.stringify({ name }) });
+export const deleteClass = (id: string) =>
+  request<{ ok: true }>(`/api/classes/${id}`, { method: "DELETE" });
+
 // Chapters
-export const fetchChapters = () => request<ChapterSummary[]>("/api/chapters");
+export const fetchChapters = (classId: string) =>
+  request<ChapterSummary[]>(`/api/chapters?classId=${classId}`);
 export const fetchChapter = (id: string) => request<Chapter>(`/api/chapters/${id}`);
-export const createChapter = (name: string) =>
-  request<Chapter>("/api/chapters", { method: "POST", body: JSON.stringify({ name }) });
+export const createChapter = (classId: string, name: string) =>
+  request<Chapter>("/api/chapters", { method: "POST", body: JSON.stringify({ classId, name }) });
 export const renameChapter = (id: string, name: string) =>
   request<Chapter>(`/api/chapters/${id}`, { method: "PATCH", body: JSON.stringify({ name }) });
 export const deleteChapter = (id: string) =>
@@ -59,10 +72,10 @@ export const submitChapterTest = (
 ) => request<TestAttempt>(`/api/chapters/${chapterId}/tests`, { method: "POST", body: JSON.stringify(payload) });
 
 // Units
-export const fetchUnits = () => request<UnitSummary[]>("/api/units");
+export const fetchUnits = (classId: string) => request<UnitSummary[]>(`/api/units?classId=${classId}`);
 export const fetchUnit = (id: string) => request<UnitDetail>(`/api/units/${id}`);
-export const createUnit = (name: string, chapterIds: string[]) =>
-  request<Unit>("/api/units", { method: "POST", body: JSON.stringify({ name, chapterIds }) });
+export const createUnit = (classId: string, name: string, chapterIds: string[]) =>
+  request<Unit>("/api/units", { method: "POST", body: JSON.stringify({ classId, name, chapterIds }) });
 export const updateUnit = (id: string, updates: { name?: string; chapterIds?: string[] }) =>
   request<Unit>(`/api/units/${id}`, { method: "PATCH", body: JSON.stringify(updates) });
 export const deleteUnit = (id: string) => request<{ ok: true }>(`/api/units/${id}`, { method: "DELETE" });

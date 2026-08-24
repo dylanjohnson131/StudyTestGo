@@ -3,23 +3,23 @@ import { getUnit, getUnitChapters, listChapters, listUnitTestAttempts } from "@/
 import UnitWorkspace from "@/components/UnitWorkspace";
 import type { UnitDetail } from "@/lib/types";
 
-export default async function UnitPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const unit = await getUnit(id);
+export default async function UnitPage({ params }: { params: Promise<{ id: string; unitId: string }> }) {
+  const { id, unitId } = await params;
+  const unit = await getUnit(unitId);
 
-  if (!unit) {
+  if (!unit || unit.classId !== id) {
     return (
       <main className="container">
         <p>Unit not found.</p>
-        <Link href="/units">Back to units</Link>
+        <Link href={`/classes/${id}/units`}>Back to units</Link>
       </main>
     );
   }
 
   const [chapters, testAttempts, allChapters] = await Promise.all([
     getUnitChapters(unit),
-    listUnitTestAttempts(id),
-    listChapters(),
+    listUnitTestAttempts(unitId),
+    listChapters(id),
   ]);
 
   const unitDetail: UnitDetail = {
@@ -30,7 +30,7 @@ export default async function UnitPage({ params }: { params: Promise<{ id: strin
 
   return (
     <UnitWorkspace
-      unitId={id}
+      unitId={unitId}
       initialUnit={unitDetail}
       initialTestAttempts={testAttempts ?? []}
       initialAllChapters={allChapters}
